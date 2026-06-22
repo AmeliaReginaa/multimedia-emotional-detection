@@ -1,0 +1,298 @@
+import streamlit as st
+import torch
+import torch.nn as nn
+from torchvision import transforms
+from PIL import Image
+
+# =====================================
+# PAGE CONFIG
+# =====================================
+
+st.set_page_config(
+    page_title="Stress Detection AI",
+    layout="wide"
+)
+
+# =====================================
+# CSS
+# =====================================
+
+st.markdown("""
+<style>
+
+.stApp{
+    background-color:#0B1020;
+    color:white;
+}
+
+h1,h2,h3{
+    color:white;
+}
+
+[data-testid="stMetric"]{
+    background:#111827;
+    padding:15px;
+    border-radius:12px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =====================================
+# CNN MODEL
+# =====================================
+
+class EmotionCNNDeepFC(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+        self.features = nn.Sequential(
+
+            nn.Conv2d(1,64,3,padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+
+            nn.Conv2d(64,64,3,padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+
+            nn.MaxPool2d(2),
+            nn.Dropout(0.25),
+
+            nn.Conv2d(64,128,3,padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+
+            nn.Conv2d(128,128,3,padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+
+            nn.MaxPool2d(2),
+            nn.Dropout(0.30),
+
+            nn.Conv2d(128,256,3,padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+
+            nn.Conv2d(256,256,3,padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+
+            nn.MaxPool2d(2),
+            nn.Dropout(0.30)
+        )
+
+        self.classifier = nn.Sequential(
+
+            nn.Linear(256*6*6,1024),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+
+            nn.Linear(1024,512),
+            nn.ReLU(),
+
+            nn.Linear(512,256),
+            nn.ReLU(),
+
+            nn.Linear(256,128),
+            nn.ReLU(),
+
+            nn.Linear(128,2)
+        )
+
+    def forward(self,x):
+
+        x = self.features(x)
+
+        x = torch.flatten(x,1)
+
+        x = self.classifier(x)
+
+        return x
+
+# =====================================
+# LOAD MODEL
+# =====================================
+
+@st.cache_resource
+def load_model():
+
+    model = EmotionCNNDeepFC()
+
+    model.load_state_dict(
+        torch.load(
+            "best_emotion_model.pth",
+            map_location="cpu"
+        )
+    )
+
+    model.eval()
+
+    return model
+
+model = load_model()
+
+# =====================================
+# PREPROCESSING
+# =====================================
+
+transform = transforms.Compose([
+
+    transforms.Grayscale(
+        num_output_channels=1
+    ),
+
+    transforms.Resize((48,48)),
+
+    transforms.ToTensor(),
+
+    transforms.Normalize(
+        mean=[0.5],
+        std=[0.5]
+    )
+])
+
+# =====================================
+# PREDICTION
+# =====================================
+
+def predict_image(image):
+
+    image = transform(image)
+
+    image = image.unsqueeze(0)
+
+    with torch.no_grad():
+
+        output = model(image)
+
+        probs = torch.softmax(
+            output,
+            dim=1
+        )
+
+        confidence, pred = torch.max(
+            probs,
+            dim=1
+        )
+
+    labels = [
+        "Non Stress",
+        "Stress"
+    ]
+
+    return (
+        labels[pred.item()],
+        confidence.item()*100,
+        probs.squeeze().numpy()
+    )
+
+# =====================================
+# SIDEBAR
+# =====================================
+
+menu = st.sidebar.radio(
+    "Menu",
+    [
+        "Stress Detection",
+        "Model Information"
+    ]
+)
+
+# =====================================
+# PAGE 1
+# =====================================
+
+if menu == "Stress Detection":
+
+    st.title("🧠 Sentient Face AI")
+    st.subheader("Stress Detection using CNN")
+
+    uploaded_file = st.file_uploader(
+        "Upload Face Image",
+        type=["jpg","jpeg","png"]
+    )
+
+    if uploaded_file:
+
+        image = Image.open(uploaded_file)
+
+        prediction, confidence, probs = predict_image(image)
+
+        col1,col2 = st.columns(2)
+
+        with col1:
+
+            st.image(
+                image,
+                caption="Uploaded Image",
+                use_container_width=True
+            )
+
+        with col2:
+
+            st.metric(
+                "Prediction",
+                prediction
+            )
+
+            st.progress(
+                confidence/100
+            )
+
+            st.write(
+                f"Confidence : {confidence:.2f}%"
+            )
+
+            st.subheader(
+                "Probability"
+            )
+
+            st.write(
+                f"Non Stress : {probs[0]*100:.2f}%"
+            )
+
+            st.write(
+                f"Stress : {probs[1]*100:.2f}%"
+            )
+
+# =====================================
+# PAGE 2
+# =====================================
+
+if menu == "Model Information":
+
+    st.title("📊 Model Analysis")
+
+    st.markdown("""
+### CNN Architecture
+
+EmotionCNNDeepFC
+
+- Input : 48x48 Grayscale
+- Conv Block 1 : 64 filters
+- Conv Block 2 : 128 filters
+- Conv Block 3 : 256 filters
+
+### Performance
+
+- Validation Accuracy : 84.7%
+- Classes :
+    - Stress
+    - Non Stress
+
+### Quantization Variants
+
+- FP32
+- FP16
+- QINT8
+- FLOAT8 (Simulated)
+- FLOAT4 (Simulated)
+- QINT4 (Simulated)
+
+### Deployment
+
+- FP16 → GPU Realtime
+- QINT8 → CPU Lightweight
+""")
