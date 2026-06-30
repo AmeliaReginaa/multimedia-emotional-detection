@@ -154,22 +154,182 @@ def predict_image(image):
     )
 
 # =====================================================
-# STREAMLIT UI
+# STREAMLIT UI CONFIG
 # =====================================================
 
 st.set_page_config(
     page_title="CNN Stress Detection Dashboard",
-    page_icon="🧠",
     layout="wide"
 )
 
-st.title("🧠 CNN Stress Detection Dashboard")
+# =====================================================
+# CUSTOM CSS - BLUE GRADIENT THEME
+# =====================================================
+st.markdown("""
+<style>
 
-st.write(
-    """
-    Sistem multimedia untuk mendeteksi kondisi stress dan non-stress
-    menggunakan CNN berbasis ekspresi wajah.
-    """
+.stApp {
+    background: linear-gradient(135deg, #0a1a3c 0%, #14306e 35%, #1f4e9c 70%, #2f6fd6 100%);
+    background-attachment: fixed;
+}
+
+[data-testid="stHeader"] {
+    background: rgba(0,0,0,0);
+}
+
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+
+.app-title {
+    font-size: 2.3rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 0.2rem;
+    letter-spacing: 0.5px;
+}
+
+.app-subtitle {
+    text-align: center;
+    color: #cfe0ff;
+    font-size: 1rem;
+    margin-bottom: 1.8rem;
+    font-weight: 400;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 18px;
+    padding: 1.4rem 1.6rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 20, 60, 0.35);
+    height: 100%;
+}
+
+.section-label {
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.result-stress {
+    background: linear-gradient(135deg, #ff5f6d, #c0392b);
+    color: white;
+    padding: 0.9rem 1.2rem;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-align: center;
+    box-shadow: 0 6px 18px rgba(192, 57, 43, 0.4);
+    margin-bottom: 0.9rem;
+}
+
+.result-nonstress {
+    background: linear-gradient(135deg, #00c896, #1ea1f1);
+    color: white;
+    padding: 0.9rem 1.2rem;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-align: center;
+    box-shadow: 0 6px 18px rgba(30, 161, 241, 0.4);
+    margin-bottom: 0.9rem;
+}
+
+.metric-box {
+    background: rgba(255,255,255,0.10);
+    border-radius: 12px;
+    padding: 0.7rem 0.9rem;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+.metric-box .label {
+    color: #cfe0ff;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.metric-box .value {
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 800;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+    background: rgba(255,255,255,0.06);
+    padding: 6px;
+    border-radius: 14px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background: transparent;
+    border-radius: 10px;
+    color: #cfe0ff;
+    font-weight: 600;
+    padding: 8px 18px;
+}
+
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, #2f6fd6, #1ea1f1) !important;
+    color: white !important;
+}
+
+[data-testid="stFileUploader"] {
+    background: rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 0.8rem;
+    border: 1px dashed rgba(255,255,255,0.35);
+}
+
+[data-testid="stFileUploader"] label {
+    color: #e6efff !important;
+}
+
+.stProgress > div > div {
+    background: linear-gradient(90deg, #1ea1f1, #00c896);
+}
+
+.info-banner {
+    background: rgba(255,255,255,0.08);
+    border-left: 4px solid #1ea1f1;
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    color: #e6efff;
+    margin-bottom: 1rem;
+}
+
+.footer-card {
+    background: rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 1.2rem 1.5rem;
+    margin-top: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+.footer-info-line {
+    color: #e6efff !important;
+    margin: 0.35rem 0 !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="app-title">🧠 CNN Stress Detection Dashboard</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="app-subtitle">Sistem multimedia untuk mendeteksi kondisi stress dan non-stress menggunakan CNN berbasis ekspresi wajah</div>',
+    unsafe_allow_html=True
 )
 
 tab1, tab2 = st.tabs([
@@ -185,7 +345,7 @@ class VideoProcessor(VideoProcessorBase):
     def recv(self, frame):
 
         img = frame.to_ndarray(format="bgr24")
-        
+
         img = cv2.flip(img, 1)
 
         gray = cv2.cvtColor(
@@ -260,6 +420,9 @@ class VideoProcessor(VideoProcessorBase):
             format="bgr24"
         )
 
+# =====================================================
+# TAB 1 - UPLOAD IMAGE
+# =====================================================
 with tab1:
 
     uploaded_file = st.file_uploader(
@@ -273,64 +436,65 @@ with tab1:
             uploaded_file
         ).convert("RGB")
 
-        col1, col2 = st.columns(2)
+        col1, col2 = st.columns([1, 1.6], gap="large")
 
         with col1:
-
-            st.image(
-                image,
-                caption="Input Image",
-                use_container_width=True
-            )
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            st.markdown('<div class="section-label">🖼️ Input Image</div>', unsafe_allow_html=True)
+            st.image(image, width=260)
+            st.markdown('</div>', unsafe_allow_html=True)
 
         with col2:
 
-            pred, conf, probs = predict_image(
-                image
-            )
+            pred, conf, probs = predict_image(image)
 
             label = class_names[pred]
 
-            st.subheader(
-                "📊 Detection Result"
-            )
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            st.markdown('<div class="section-label">📊 Detection Result</div>', unsafe_allow_html=True)
 
             if label == "STRESS":
-
-                st.error(
-                    f"🚨 {label}"
-                )
-
+                st.markdown(f'<div class="result-stress">🚨 {label}</div>', unsafe_allow_html=True)
             else:
+                st.markdown(f'<div class="result-nonstress">✅ {label}</div>', unsafe_allow_html=True)
 
-                st.success(
-                    f"✅ {label}"
+            m1, m2 = st.columns(2)
+            with m1:
+                st.markdown(
+                    f'<div class="metric-box"><div class="label">Confidence</div>'
+                    f'<div class="value">{conf*100:.2f}%</div></div>',
+                    unsafe_allow_html=True
+                )
+            with m2:
+                st.markdown(
+                    f'<div class="metric-box"><div class="label">Predicted Class</div>'
+                    f'<div class="value">{label}</div></div>',
+                    unsafe_allow_html=True
                 )
 
-            st.metric(
-                "Confidence",
-                f"{conf*100:.2f}%"
-            )
-
+            st.write("")
             st.progress(conf)
 
-            st.subheader(
-                "📈 Probability Distribution"
-            )
+            st.markdown('<div class="section-label" style="margin-top:1rem;">📈 Probability Distribution</div>', unsafe_allow_html=True)
 
             st.bar_chart({
                 "NON-STRESS": float(probs[0]),
                 "STRESS": float(probs[1])
             })
-            
+
+            st.markdown('</div>', unsafe_allow_html=True)
+
+# =====================================================
+# TAB 2 - REALTIME WEBCAM
+# =====================================================
 with tab2:
 
-    st.subheader(
-        "🎥 Realtime Webcam Detection"
-    )
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">🎥 Realtime Webcam Detection</div>', unsafe_allow_html=True)
 
-    st.info(
-        "Arahkan wajah ke kamera. Hasil prediksi akan muncul langsung pada video."
+    st.markdown(
+        '<div class="info-banner">Arahkan wajah ke kamera. Hasil prediksi akan muncul langsung pada video.</div>',
+        unsafe_allow_html=True
     )
 
     webrtc_streamer(
@@ -341,34 +505,37 @@ with tab2:
             "audio": False
         }
     )
-    
-st.divider()
 
-st.subheader(
-    "📌 Model Information"
-)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-c1, c2, c3 = st.columns(3)
+# =====================================================
+# MODEL INFORMATION FOOTER
+# =====================================================
+st.markdown('<div class="footer-card">', unsafe_allow_html=True)
+st.markdown('<div class="section-label">📌 Model Information</div>', unsafe_allow_html=True)
+
+c1, c2 = st.columns(2)
 
 with c1:
-    st.metric(
-        "Accuracy",
-        "84.81%"
+    st.markdown(
+        '<div class="metric-box"><div class="label">Accuracy</div><div class="value">84.81%</div></div>',
+        unsafe_allow_html=True
     )
 
 with c2:
-    st.metric(
-        "ROC-AUC",
-        "0.9264"
+    st.markdown(
+        '<div class="metric-box"><div class="label">Classes</div><div class="value">2</div></div>',
+        unsafe_allow_html=True
     )
 
-with c3:
-    st.metric(
-        "Classes",
-        "2"
-    )
-
-st.write("Dataset : FER2013")
-st.write("Model : EmotionCNNDeepFC")
-st.write("Input : 48x48 Grayscale")
-st.write("Classes : Stress / Non-Stress")
+st.write("")
+st.markdown(
+    """
+    <div class="footer-info-line">📁 Dataset : FER2013</div>
+    <div class="footer-info-line">🧠 Model : EmotionCNNDeepFC</div>
+    <div class="footer-info-line">🖼️ Input : 48x48 Grayscale</div>
+    <div class="footer-info-line">🏷️ Classes : Stress / Non-Stress</div>
+    """,
+    unsafe_allow_html=True
+)
+st.markdown('</div>', unsafe_allow_html=True)
